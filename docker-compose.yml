@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: download-bi-app
+    restart: unless-stopped
+    ipc: host
+    init: true
+    # Seccomp é importante para Playwright
+    security_opt:
+      - seccomp=seccomp-playwright.json
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - app_data:/app/data
+      - ./downloads:/app/downloads
+    # No Coolify, usamos expose para o proxy interno
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  app_data:
