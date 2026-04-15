@@ -1,0 +1,19 @@
+{
+  "urls": {
+    "login": "https://logtudo.e-login.net/",
+    "transp_rel_cotacoes_frete_formulario": "https://logtudo.e-login.net/versoes/versao5.0/rotinas/c.php?id=transp_rel_cotacoesFrete_formulario&menu=s&filtro=152",
+    "transp_rel_cotacoes_frete_filtrados": "https://logtudo.e-login.net/versoes/versao5.0/rotinas/c.php?menu=s&id=transp_rel_cotacoesFrete_formulario&filtro=59&filtro=126&filtro=127",
+    "transp_rel_cotacoes_frete_download3": "https://logtudo.e-login.net/versoes/versao5.0/rotinas/c.php?id=transp_rel_cotacoesFrete_formulario&menu=s&filtro=151",
+    "trans_rel_conhecimento_frete": "https://logtudo.e-login.net/versoes/versao5.0/rotinas/c.php?id=trans_rel_conhecimento_formulario&menu=s&filtro=167"
+  },
+  "selectors": {
+    "campo_usuario": "input[name='usuario']",
+    "campo_senha": "input[name='senha']",
+    "botao_entrar": "#botaoSubmit",
+    "msg_erro_login": "p:has-text('O Usuário ou a Senha estão incorretos')",
+    "botao_gerar_relatorio": "button:has-text('Gerar Relatório')"
+  },
+  "erros": {
+    "login_invalido": "O Usuário ou a Senha estão incorretos"
+  }
+}

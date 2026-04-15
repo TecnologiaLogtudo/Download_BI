@@ -1,0 +1,47 @@
+# Ambiente
+.venv/
+env/
+venv/
+ENV/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+.playwright-mcp/
+.pycache_temp/
+
+# Credenciais e arquivos sensíveis
+.env
+.env.local
+.env.*.local
+credentials.json
+secrets.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Screenshots de debug
+debug_screenshot.png
+screenshots/
+
+# Vídeos e gravações
+videos/
+*.mp4
+*.webm
+
+# Relatórios e outputs
+output/
+downloads/
+reports/
+*.html
