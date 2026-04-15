@@ -6,6 +6,7 @@ Este módulo tem lógica especial pois abre uma nova página após gerar relató
 import os
 import re
 import time
+from pathlib import Path
 
 from Automacao.config_loader import carregar_mapeamento
 
@@ -152,7 +153,8 @@ def gerar_download_conhecimento_frete(
         filename = download.suggested_filename or "Conhecimento_Frete.xls"
         
         # Cria a pasta downloads com subpasta específica
-        base_path = os.path.join("downloads", "PASTA BI - OCORRENCIAS")
+        base_download_dir = os.getenv("DOWNLOAD_DIR", str(Path(__file__).parent.parent / "downloads"))
+        base_path = os.path.join(base_download_dir, "PASTA BI - OCORRENCIAS")
         os.makedirs(base_path, exist_ok=True)
         save_path = os.path.join(base_path, filename)
         # Salva o arquivo permanentemente

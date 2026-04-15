@@ -5,6 +5,7 @@ Encapsula a lógica comum de navegação, busca de botão e download.
 
 import os
 import re
+from pathlib import Path
 
 from Automacao.logger_config import get_logger
 
@@ -67,9 +68,10 @@ def gerar_download_relatorio(
         filename = nome_arquivo if nome_arquivo else download.suggested_filename
         
         # Cria a pasta downloads com subpasta se especificada
-        base_path = "downloads"
+        base_download_dir = os.getenv("DOWNLOAD_DIR", str(Path(__file__).parent.parent / "downloads"))
+        base_path = base_download_dir
         if subpasta:
-            base_path = os.path.join("downloads", subpasta.rstrip("/"))
+            base_path = os.path.join(base_download_dir, subpasta.rstrip("/"))
         
         os.makedirs(base_path, exist_ok=True)
         save_path = os.path.join(base_path, filename)

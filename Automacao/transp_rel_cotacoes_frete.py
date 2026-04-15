@@ -139,4 +139,4 @@ if __name__ == "__main__":
     if not usuario or not senha:
         raise ValueError("Defina LOGTUDO_USER e LOGTUDO_PASS no arquivo .env")
 
-    acessar_transp_rel_cotacoes_frete(usuario, senha, headless=False, debug=True)
+    acessar_transp_rel_cotacoes_frete(usuario, senha, headless=True, debug=True)
