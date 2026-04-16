@@ -134,7 +134,8 @@ def gerar_download_conhecimento_frete(
         filename = download.suggested_filename or "Conhecimento_Frete.xls"
         
         # Sanitiza nome do arquivo se necessário (Requisito: Padrão Detalhado -> Padrao_detalhado)
-        filename = filename.replace("Padrão Detalhado", "Padrao_detalhado")
+        # Usamos regex para ignorar variações de codificação do 'ã'
+        filename = re.sub(r"Padr.o Detalhado", "Padrao_detalhado", filename, flags=re.IGNORECASE)
         
         # Define pasta final robusta
         base_path = DOWNLOADS_DIR_ATIVO / "PASTA_BI_OCORRENCIAS"
