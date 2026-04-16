@@ -133,8 +133,11 @@ def gerar_download_conhecimento_frete(
         download = download_info.value
         filename = download.suggested_filename or "Conhecimento_Frete.xls"
         
+        # Sanitiza nome do arquivo se necessário (Requisito: Padrão Detalhado -> Padrao_detalhado)
+        filename = filename.replace("Padrão Detalhado", "Padrao_detalhado")
+        
         # Define pasta final robusta
-        base_path = DOWNLOADS_DIR_ATIVO / "PASTA BI - OCORRENCIAS"
+        base_path = DOWNLOADS_DIR_ATIVO / "PASTA_BI_OCORRENCIAS"
         base_path.mkdir(parents=True, exist_ok=True)
         save_path = base_path / filename
         

@@ -45,6 +45,6 @@ def gerar_download_cotacoes_filtradas(
         url=url_cotacoes_filtradas,
         nome_operacao="DOWNLOAD 2 - Cotações Filtradas",
         debug=debug,
-        subpasta="Não Faturados/",
+        subpasta="Nao_Faturados/",
         nome_arquivo="relatorio.xls",
     )
