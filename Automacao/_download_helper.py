@@ -8,6 +8,8 @@ import re
 from pathlib import Path
 
 from Automacao.logger_config import get_logger
+from Automacao.config_pastas import DOWNLOADS_DIR_ATIVO
+from Automacao.metadata_manager import metadata_manager
 
 logger = get_logger(__name__)
 
@@ -19,7 +21,7 @@ def gerar_download_relatorio(
     debug: bool = True,
     subpasta: str = "",
     nome_arquivo: str = None,
-) -> str:
+) -> tuple[str, str]:
     """
     Função genérica para acessar uma URL, localizar botão "Gerar Relatório"
     e fazer download do arquivo.
@@ -28,10 +30,12 @@ def gerar_download_relatorio(
         page: Objeto da página Playwright já autenticada
         url: URL a acessar
         nome_operacao: Nome descritivo da operação (para logs)
-        debug: Se True, salva screenshots em caso de erro        subpasta: Subpasta dentro de 'downloads' (ex: 'Faturados/')
-        nome_arquivo: Nome customizado do arquivo (se None, usa o sugerido)        
+        debug: Se True, salva screenshots em caso de erro
+        subpasta: Subpasta dentro de 'downloads' (ex: 'Faturados/')
+        nome_arquivo: Nome customizado do arquivo
+        
     Returns:
-        str: Caminho do arquivo salvo
+        tuple[str, str]: (Caminho completo do arquivo, ID do download no metadados)
         
     Raises:
         Exception: Se ocorrer erro na interação ou download
@@ -60,28 +64,36 @@ def gerar_download_relatorio(
         botao_gerar.wait_for(state="visible", timeout=10000)
 
         logger.info(f"[{nome_operacao}] Iniciando captura do download e clicando no botão...")
-        logger.info(f"[{nome_operacao}] Aguardando download (pode levar alguns minutos para arquivos grandes)...")
+        logger.info(f"[{nome_operacao}] Aguardando download (pode levar alguns minutos)...")
+        
         with page.expect_download(timeout=600000) as download_info:
             botao_gerar.click()
 
         download = download_info.value
         filename = nome_arquivo if nome_arquivo else download.suggested_filename
         
-        # Cria a pasta downloads com subpasta se especificada
-        base_download_dir = os.getenv("DOWNLOAD_DIR", str(Path(__file__).parent.parent / "downloads"))
-        base_path = base_download_dir
+        # Define pasta final usando o sistema de persistência robusto
+        base_path = DOWNLOADS_DIR_ATIVO
         if subpasta:
-            base_path = os.path.join(base_download_dir, subpasta.rstrip("/"))
+            base_path = DOWNLOADS_DIR_ATIVO / subpasta.strip("/")
         
-        os.makedirs(base_path, exist_ok=True)
-        save_path = os.path.join(base_path, filename)
+        base_path.mkdir(parents=True, exist_ok=True)
+        save_path = base_path / filename
         
         # Salva o arquivo permanentemente
-        download.save_as(save_path)
+        download.save_as(str(save_path))
         
-        logger.info(f"[{nome_operacao}] ✓ Download concluído e salvo em: {save_path}")
+        # Registra no sistema de metadados
+        download_id = metadata_manager.registrar_download(
+            operacao=nome_operacao,
+            url=url,
+            caminho=str(save_path)
+        )
         
-        return save_path
+        logger.info(f"[{nome_operacao}] ✓ Download concluído e registrado [ID: {download_id}]")
+        logger.info(f"[{nome_operacao}] Caminho: {save_path}")
+        
+        return str(save_path), download_id
 
     except Exception as e:
         logger.error(f"[{nome_operacao}] ✗ Erro na interação com o botão ou download: {e}")

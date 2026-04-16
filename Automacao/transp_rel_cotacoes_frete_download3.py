@@ -19,7 +19,7 @@ def gerar_download_cotacoes_download3(
     page,
     url_download3: str = None,
     debug: bool = True,
-) -> str:
+) -> tuple[str, str]:
     """
     Acessa a URL de cotações de frete com filtro 151 e realiza o download.
     
@@ -29,7 +29,7 @@ def gerar_download_cotacoes_download3(
         debug: Se True, salva screenshots em caso de erro
         
     Returns:
-        str: Caminho do arquivo salvo
+        tuple[str, str]: (Caminho completo do arquivo, ID do download)
     """
     mapeamento = carregar_mapeamento()
     
