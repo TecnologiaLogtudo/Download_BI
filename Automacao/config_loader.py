@@ -16,7 +16,7 @@ def _mapeamento_base() -> Dict[str, Any]:
             "transp_rel_cotacoes_frete_formulario": os.getenv(
                 "LOGTUDO_URL_COTACOES_FRETE",
                 "https://logtudo.e-login.net/versoes/versao5.0/rotinas/"
-                "c.php?id=transp_rel_cotacoesFrete_formulario&menu=s&filtro=152",
+                "carrega_rotina.php?id=transp_rel_cotacoesFrete_formulario&filtro=152",
             ),
         },
         "selectors": {

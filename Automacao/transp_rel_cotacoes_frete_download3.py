@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 URL_COTACOES_FRETE_DOWNLOAD3_PADRAO = (
     "https://logtudo.e-login.net/versoes/versao5.0/rotinas/"
-    "c.php?id=transp_rel_cotacoesFrete_formulario&menu=s&filtro=151"
+    "carrega_rotina.php?id=transp_rel_cotacoesFrete_formulario&filtro=151"
 )
 
 
