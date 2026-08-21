@@ -63,14 +63,121 @@ def gerar_download_relatorio(
         # Espera ficar visível e habilitado
         botao_gerar.wait_for(state="visible", timeout=10000)
 
-        logger.info(f"[{nome_operacao}] Iniciando captura do download e clicando no botão...")
-        logger.info(f"[{nome_operacao}] Aguardando download (pode levar alguns minutos)...")
-        
-        with page.expect_download(timeout=600000) as download_info:
-            botao_gerar.click()
+        # Tratar alertas JS na página (ex: "Nenhum registro encontrado")
+        def tratar_dialogo(dialog):
+            logger.warning(f"[{nome_operacao}] Alerta JS detectado: '{dialog.message}'. Aceitando...")
+            try:
+                dialog.accept()
+            except Exception as err:
+                logger.warning(f"[{nome_operacao}] Não foi possível aceitar diálogo: {err}")
 
-        download = download_info.value
-        filename = nome_arquivo if nome_arquivo else download.suggested_filename
+        page.on("dialog", tratar_dialogo)
+
+        captured_pages = []
+        captured_downloads = []
+
+        def on_page(p):
+            logger.info(f"[{nome_operacao}] Nova aba/janela detectada!")
+            captured_pages.append(p)
+
+        def on_download(d):
+            logger.info(f"[{nome_operacao}] Download direto detectado!")
+            captured_downloads.append(d)
+
+        # Registrar listeners temporários
+        page.context.on("page", on_page)
+        page.on("download", on_download)
+
+        logger.info(f"[{nome_operacao}] Clicando no botão 'Gerar Relatório'...")
+        botao_gerar.click()
+
+        logger.info(f"[{nome_operacao}] Aguardando resposta do servidor (download direto ou abertura de nova página)...")
+        
+        # Aguarda até 30s por uma resposta do clique (nova página ou download direto)
+        start_time = time.time()
+        while time.time() - start_time < 30:
+            if captured_pages or captured_downloads:
+                break
+            time.sleep(0.5)
+
+        # Remover listeners temporários
+        try:
+            page.context.remove_listener("page", on_page)
+        except Exception:
+            pass
+        try:
+            page.remove_listener("download", on_download)
+        except Exception:
+            pass
+
+        download = None
+
+        if captured_pages:
+            nova_pagina = captured_pages[0]
+            nova_pagina.on("dialog", tratar_dialogo)
+            logger.info(f"[{nome_operacao}] Aguardando carregamento da página do relatório...")
+            try:
+                nova_pagina.wait_for_load_state("networkidle", timeout=30000)
+            except Exception:
+                logger.warning(f"[{nome_operacao}] Timeout no 'networkidle' da nova página, continuando...")
+
+            logger.info(f"[{nome_operacao}] Procurando botão de exportação Excel nos Iframes...")
+            seletores_excel = [
+                'img[alt*="Excel"]',
+                'img[title*="Excel"]',
+                'img[alt*="excel"]',
+                'img[title*="excel"]',
+                'a:has(img[alt*="excel"])',
+                'a:has(img[title*="excel"])',
+                'a:has(img[alt*="Excel"])',
+                'a:has(img[title*="Excel"])',
+            ]
+
+            frame_download = None
+            seletor_excel = ""
+
+            for tentativa in range(5):
+                for frame in nova_pagina.frames:
+                    try:
+                        for seletor in seletores_excel:
+                            if frame.locator(seletor).count() > 0:
+                                frame_download = frame
+                                seletor_excel = seletor
+                                break
+                        if frame_download:
+                            break
+                    except Exception:
+                        continue
+                if frame_download:
+                    break
+                time.sleep(2)
+
+            if not frame_download:
+                logger.info(f"[{nome_operacao}] Usando fallback para frame locator...")
+                frame_download = nova_pagina.frame_locator("iframe").first
+                seletor_excel = 'img[alt*="excel"], img[alt*="Excel"]'
+
+            logger.info(f"[{nome_operacao}] Clicando no ícone Excel para gerar o download...")
+            with nova_pagina.expect_download(timeout=600000) as download_info:
+                try:
+                    frame_download.locator(seletor_excel).first.click(timeout=15000)
+                except Exception:
+                    frame_download.locator('img[alt*="xcel"]').first.click(timeout=15000)
+
+            download = download_info.value
+            try:
+                nova_pagina.close()
+            except Exception:
+                pass
+
+        elif captured_downloads:
+            download = captured_downloads[0]
+        else:
+            raise TimeoutError(
+                f"[{nome_operacao}] Nenhum download ou nova página de relatório foi gerada em 30s após clicar em 'Gerar Relatório'."
+            )
+
+        filename = nome_arquivo if nome_arquivo else (download.suggested_filename if download else "relatorio.xls")
         
         # Define pasta final usando o sistema de persistência robusto
         base_path = DOWNLOADS_DIR_ATIVO
@@ -99,6 +206,9 @@ def gerar_download_relatorio(
         logger.error(f"[{nome_operacao}] ✗ Erro na interação com o botão ou download: {e}")
         if debug:
             screenshot_path = f"erro_{nome_operacao.lower().replace(' ', '_')}.png"
-            page.screenshot(path=screenshot_path)
-            logger.info(f"[{nome_operacao}] Screenshot de erro salva em: {screenshot_path}")
+            try:
+                page.screenshot(path=screenshot_path)
+                logger.info(f"[{nome_operacao}] Screenshot de erro salva em: {screenshot_path}")
+            except Exception:
+                pass
         raise
