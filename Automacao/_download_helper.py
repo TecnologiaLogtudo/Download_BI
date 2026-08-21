@@ -5,6 +5,7 @@ Encapsula a lógica comum de navegação, busca de botão e download.
 
 import os
 import re
+import time
 from pathlib import Path
 
 from Automacao.logger_config import get_logger
