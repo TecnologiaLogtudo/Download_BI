@@ -20,7 +20,9 @@ USER pwuser
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PLAYWRIGHT_HEADLESS=true
+    PLAYWRIGHT_HEADLESS=true \
+    PYTHONIOENCODING=utf-8 \
+    PYTHONUTF8=1
 
 # Porta exposta para o Coolify (Proxy reverso)
 EXPOSE 8000

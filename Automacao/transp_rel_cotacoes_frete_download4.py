@@ -1,12 +1,13 @@
 """
-Fluxo para download de conhecimento de fretes.
-Este módulo tem lógica especial pois abre uma nova página após gerar relatório.
+Fluxo para download de conhecimento de fretes (Download 4).
+Utiliza popup window e o frame topo para capturar a planilha gerada.
 """
 
 import os
 import re
 import time
 from pathlib import Path
+from datetime import datetime
 
 from Automacao.config_loader import carregar_mapeamento
 from Automacao.logger_config import get_logger
@@ -15,11 +16,17 @@ from Automacao.metadata_manager import metadata_manager
 
 logger = get_logger(__name__)
 
-
 URL_CONHECIMENTO_FRETE_PADRAO = (
     "https://logtudo.e-login.net/versoes/versao5.0/rotinas/"
     "c.php?id=trans_rel_conhecimento_formulario&menu=s&filtro=167"
 )
+
+
+def obter_intervalo_mes_atual() -> tuple[str, str]:
+    now = datetime.now()
+    primeiro_dia = f"01/{now.month:02d}/{now.year}"
+    hoje = now.strftime("%d/%m/%Y")
+    return primeiro_dia, hoje
 
 
 def gerar_download_conhecimento_frete(
@@ -28,16 +35,7 @@ def gerar_download_conhecimento_frete(
     debug: bool = True,
 ) -> tuple[str, str]:
     """
-    Acessa a URL de conhecimento de fretes, gera relatório (abre nova página)
-    e realiza o download do arquivo Excel.
-    
-    Args:
-        page: Objeto da página Playwright já autenticada
-        url_conhecimento: URL customizada (usa padrão se não fornecida)
-        debug: Se True, salva screenshots em caso de erro
-        
-    Returns:
-        tuple[str, str]: (Caminho completo do arquivo, ID do download)
+    Acessa a URL de conhecimento de fretes, abre popup do relatório e faz o download.
     """
     mapeamento = carregar_mapeamento()
     
@@ -55,113 +53,65 @@ def gerar_download_conhecimento_frete(
 
     logger.info(f"[DOWNLOAD 4 - Conhecimento Frete] Acessando URL: {url_conhecimento}")
     page.goto(url_conhecimento, wait_until="load")
+    time.sleep(2)
 
     logger.info("[DOWNLOAD 4 - Conhecimento Frete] Localizando botão 'Gerar Relatório'...")
-    botao_gerar = page.get_by_role("button", name=re.compile(r"gerar relatório", re.IGNORECASE))
+    botao_gerar = page.locator("#botao_cadastrar, input[name='botao_finalizacao'], input.swbotao_download, input[value*='Relatório']").first
+    botao_gerar.wait_for(state="attached", timeout=30000)
+    botao_gerar.scroll_into_view_if_needed()
+    botao_gerar.wait_for(state="visible", timeout=10000)
+
+    logger.info("[DOWNLOAD 4 - Conhecimento Frete] Clicando no botão 'Gerar Relatório' e aguardando popup...")
 
     try:
-        # Garante que o botão está anexado ao DOM
-        botao_gerar.wait_for(state="attached", timeout=30000)
-
-        # Scroll para garantir visibilidade
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Fazendo scroll até o botão...")
-        botao_gerar.scroll_into_view_if_needed()
-
-        # Espera ficar visível e habilitado
-        botao_gerar.wait_for(state="visible", timeout=10000)
-
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Clicando no botão 'Gerar Relatório'...")
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Aguardando nova página/aba abrir...")
-
-        # Clica no botão e aguarda nova página
-        with page.context.expect_page() as new_page_info:
+        with page.expect_popup(timeout=60000) as popup_info:
             botao_gerar.click()
 
-        new_page = new_page_info.value
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Nova página detectada!")
+        page1 = popup_info.value
+        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Nova janela do relatório detectada! Aguardando carregamento...")
+        page1.wait_for_load_state("networkidle", timeout=30000)
 
-        # Espera a página carregar completamente
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Aguardando carregamento da página do relatório...")
-        new_page.wait_for_load_state("networkidle", timeout=30000)
-
-        # O botão de Excel está dentro de um Iframe
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Procurando botão de Excel dentro dos Iframes...")
-        
-        # Estratégia robusta: Procurar o frame que contém a imagem de download
-        seletores_excel = [
-            'img[alt*="Excel"]',
-            'img[title*="Excel"]',
-            'img[alt*="excel"]',
-            'img[title*="excel"]',
-            'a:has(img[alt*="excel"])',
-            'a:has(img[title*="excel"])'
-        ]
-        
-        frame_download = None
-        seletor_excel = ""
-        
-        for tentativa in range(5):
-            for frame in new_page.frames:
-                try:
-                    for seletor in seletores_excel:
-                        if frame.locator(seletor).count() > 0:
-                            frame_download = frame
-                            seletor_excel = seletor
-                            break
-                    if frame_download: break
-                except:
-                    continue
-            if frame_download: break
-            time.sleep(2)
-
-        if not frame_download:
-            logger.info("[DOWNLOAD 4 - Conhecimento Frete] Usando fallback para frame locator...")
-            frame_download = new_page.frame_locator('iframe').first
-            seletor_excel = 'img[alt*="excel"], img[alt*="Excel"]'
-
-        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Clicando no ícone Excel...")
-        try:
-            with new_page.expect_download(timeout=600000) as download_info:
-                try:
-                    frame_download.locator(seletor_excel).first.click(timeout=15000)
-                except:
-                    frame_download.locator('img[alt*="xcel"]').first.click(timeout=15000)
-        except Exception as e:
-            logger.error(f"[DOWNLOAD 4 - Conhecimento Frete] Erro ao iniciar download: {e}")
-            raise
+        logger.info("[DOWNLOAD 4 - Conhecimento Frete] Baixando planilha via frame topo...")
+        with page1.expect_download(timeout=60000) as download_info:
+            try:
+                page1.locator('frame[name="topo"]').content_frame.locator("a").nth(3).click(timeout=15000)
+            except Exception:
+                page1.locator('frame[name="topo"]').content_frame.locator('img[alt*="excel"], img[title*="excel"], img[src*="excel"]').first.click(timeout=15000)
 
         download = download_info.value
+        logger.info(f"[DOWNLOAD 4 - Conhecimento Frete] ✓ Download capturado com sucesso: {download.suggested_filename}")
+
         filename = download.suggested_filename or "Conhecimento_Frete.xls"
-        
-        # Sanitiza nome do arquivo (Requisito: Padrão Detalhado -> Padrao_Detalhado)
-        # O regex ^.*Detalhado captura perdas de encoding do servidor, como "_Detalhado" ou "Padrão_Detalhado"
         filename = re.sub(r"^.*Detalhado", "Padrao_Detalhado", filename, flags=re.IGNORECASE)
-        
-        # Define pasta final robusta
+
         base_path = DOWNLOADS_DIR_ATIVO / "PASTA_BI_OCORRENCIAS"
         base_path.mkdir(parents=True, exist_ok=True)
         save_path = base_path / filename
-        
-        # Salva o arquivo permanentemente
+
         download.save_as(str(save_path))
-        
-        # Registra no sistema de metadados
+
         download_id = metadata_manager.registrar_download(
             operacao="DOWNLOAD 4 - Conhecimento Frete",
-            url=new_page.url,
+            url=page1.url,
             caminho=str(save_path)
         )
-        
+
         logger.info(f"[DOWNLOAD 4 - Conhecimento Frete] ✓ Download concluído e registrado [ID: {download_id}]")
-        
-        # Fecha a aba do relatório para limpar memória
-        new_page.close()
+
+        try:
+            page1.close()
+        except Exception:
+            pass
 
         return str(save_path), download_id
 
     except Exception as e:
-        logger.error(f"[DOWNLOAD 4 - Conhecimento Frete] ✗ Erro na interação: {e}")
+        logger.error(f"[DOWNLOAD 4 - Conhecimento Frete] ✗ Erro no Download 4: {e}")
         if debug:
-            screenshot_path = "erro_download4_relatorio.png"
-            page.screenshot(path=screenshot_path)
+            try:
+                debug_dir = DOWNLOADS_DIR_ATIVO / "debug"
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                page.screenshot(path=str(debug_dir / "erro_download_4.png"))
+            except Exception:
+                pass
         raise

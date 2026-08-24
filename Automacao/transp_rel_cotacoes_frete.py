@@ -71,9 +71,10 @@ def acessar_transp_rel_cotacoes_frete(
                 debug=debug,
                 subpasta="Faturados/",
                 nome_arquivo="relatorio.xls",
+                preencher_datas=True,
             )
             arquivos_baixados["download_1"] = {"caminho": caminho, "id": d_id}
-            print(f"✓ DOWNLOAD 1 OK [ID: {d_id}]")
+            logger.info(f"✓ DOWNLOAD 1 OK [ID: {d_id}]")
         except Exception as e:
             logger.error(f"✗ Erro no Download 1: {e}")
             raise
@@ -83,7 +84,7 @@ def acessar_transp_rel_cotacoes_frete(
             logger.info("\n[ETAPA 2/4] DOWNLOAD 2 - Cotações Filtradas")
             caminho, d_id = gerar_download_cotacoes_filtradas(page=page, debug=debug)
             arquivos_baixados["download_2"] = {"caminho": caminho, "id": d_id}
-            print(f"✓ DOWNLOAD 2 OK [ID: {d_id}]")
+            logger.info(f"✓ DOWNLOAD 2 OK [ID: {d_id}]")
         except Exception as e:
             logger.error(f"✗ Erro no Download 2: {e}")
             raise
@@ -93,7 +94,7 @@ def acessar_transp_rel_cotacoes_frete(
             logger.info("\n[ETAPA 3/4] DOWNLOAD 3 - Cotações Filtro 151")
             caminho, d_id = gerar_download_cotacoes_download3(page=page, debug=debug)
             arquivos_baixados["download_3"] = {"caminho": caminho, "id": d_id}
-            print(f"✓ DOWNLOAD 3 OK [ID: {d_id}]")
+            logger.info(f"✓ DOWNLOAD 3 OK [ID: {d_id}]")
         except Exception as e:
             logger.error(f"✗ Erro no Download 3: {e}")
             raise
@@ -103,7 +104,7 @@ def acessar_transp_rel_cotacoes_frete(
             logger.info("\n[ETAPA 4/4] DOWNLOAD 4 - Conhecimento Frete")
             caminho, d_id = gerar_download_conhecimento_frete(page=page, debug=debug)
             arquivos_baixados["download_4"] = {"caminho": caminho, "id": d_id}
-            print(f"✓ DOWNLOAD 4 OK [ID: {d_id}]")
+            logger.info(f"✓ DOWNLOAD 4 OK [ID: {d_id}]")
         except Exception as e:
             logger.error(f"✗ Erro no Download 4: {e}")
             raise

@@ -69,22 +69,22 @@ def realizar_login_na_pagina(
     sucesso, motivo = tentar_login(1)
     
     if not sucesso:
-        print("Re-tentando login pela segunda vez...")
+        logger.warning("Re-tentando login pela segunda vez...")
         sucesso, motivo = tentar_login(2)
         
         if not sucesso:
             log_msg = f"FALHA CRÍTICA NO LOGIN: Após duas tentativas, o login falhou pelo motivo: {motivo}"
-            print(f"LOG: {log_msg}")
+            logger.error(log_msg)
             raise Exception(log_msg)
 
-    print("Aguardando navegação final...")
+    logger.info("Aguardando navegação final...")
     try:
         page.wait_for_load_state("load", timeout=15000)
     except Exception:
-        print("  ⚠ Timeout no 'load', continuando mesmo assim...")
+        logger.warning("Timeout no 'load', continuando mesmo assim...")
 
     time.sleep(2)
-    print("✓ Login concluído com sucesso!")
+    logger.info("✓ Login concluído com sucesso!")
 
 
 def realizar_login(usuario: str, senha: str, headless: bool = False, debug: bool = True) -> None:
