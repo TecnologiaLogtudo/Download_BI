@@ -22,6 +22,10 @@ class PlaywrightVPSConfig:
             "--disable-blink-features=AutomationControlled",
             "--no-first-run",
             "--no-default-browser-check",
+            "--disable-popup-blocking",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
         ]
     )
     extra_http_headers: Dict[str, str] = field(

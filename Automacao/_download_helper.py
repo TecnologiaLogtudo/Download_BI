@@ -22,6 +22,7 @@ def gerar_download_relatorio(
     debug: bool = True,
     subpasta: str = "",
     nome_arquivo: str = None,
+    timeout_resposta: int = 120,
 ) -> tuple[str, str]:
     """
     Função genérica para acessar uma URL, localizar botão "Gerar Relatório"
@@ -34,6 +35,7 @@ def gerar_download_relatorio(
         debug: Se True, salva screenshots em caso de erro
         subpasta: Subpasta dentro de 'downloads' (ex: 'Faturados/')
         nome_arquivo: Nome customizado do arquivo
+        timeout_resposta: Tempo limite em segundos aguardando resposta do servidor (padrão 120s)
         
     Returns:
         tuple[str, str]: (Caminho completo do arquivo, ID do download no metadados)
@@ -92,11 +94,11 @@ def gerar_download_relatorio(
         logger.info(f"[{nome_operacao}] Clicando no botão 'Gerar Relatório'...")
         botao_gerar.click()
 
-        logger.info(f"[{nome_operacao}] Aguardando resposta do servidor (download direto ou abertura de nova página)...")
+        logger.info(f"[{nome_operacao}] Aguardando resposta do servidor (download direto ou abertura de nova página - máx {timeout_resposta}s)...")
         
-        # Aguarda até 30s por uma resposta do clique (nova página ou download direto)
+        # Aguarda até timeout_resposta (padrão 120s) por resposta do clique
         start_time = time.time()
-        while time.time() - start_time < 30:
+        while time.time() - start_time < timeout_resposta:
             if captured_pages or captured_downloads:
                 break
             time.sleep(0.5)
@@ -175,7 +177,7 @@ def gerar_download_relatorio(
             download = captured_downloads[0]
         else:
             raise TimeoutError(
-                f"[{nome_operacao}] Nenhum download ou nova página de relatório foi gerada em 30s após clicar em 'Gerar Relatório'."
+                f"[{nome_operacao}] Nenhum download ou nova página de relatório foi gerada em {timeout_resposta}s após clicar em 'Gerar Relatório'."
             )
 
         filename = nome_arquivo if nome_arquivo else (download.suggested_filename if download else "relatorio.xls")
@@ -206,10 +208,13 @@ def gerar_download_relatorio(
     except Exception as e:
         logger.error(f"[{nome_operacao}] ✗ Erro na interação com o botão ou download: {e}")
         if debug:
-            screenshot_path = f"erro_{nome_operacao.lower().replace(' ', '_')}.png"
             try:
-                page.screenshot(path=screenshot_path)
+                debug_dir = DOWNLOADS_DIR_ATIVO / "debug"
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                nome_sanitizado = nome_operacao.lower().replace(' ', '_').replace('/', '_')
+                screenshot_path = debug_dir / f"erro_{nome_sanitizado}.png"
+                page.screenshot(path=str(screenshot_path))
                 logger.info(f"[{nome_operacao}] Screenshot de erro salva em: {screenshot_path}")
-            except Exception:
-                pass
+            except Exception as ss_err:
+                logger.warning(f"[{nome_operacao}] Não foi possível salvar screenshot: {ss_err}")
         raise
