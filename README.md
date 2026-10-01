@@ -84,21 +84,25 @@ Download_BI/
 
 ## ⚙️ Variáveis de Ambiente
 
-| Variável | Descrição | Padrão |
-|----------|-----------|--------|
-| `LOGTUDO_USER` | Usuário para login | - |
-| `LOGTUDO_PASS` | Senha para login | - |
-| `HEADLESS` | Executar sem exibir navegador | `true` |
-| `DEBUG` | Ativar mensagens de debug | `true` |
-| `LOGTUDO_URL` | URL de login (fallback quando não houver JSON) | `https://www.logtudo.com.br/login` |
+| Variável | Descrição / Relatório | Alias Alternativos | Padrão |
+|----------|-----------------------|--------------------|--------|
+| `LOGTUDO_USER` | Usuário para login | - | - |
+| `LOGTUDO_PASS` | Senha para login | - | - |
+| `HEADLESS` | Executar sem exibir navegador | - | `true` |
+| `DEBUG` | Ativar mensagens de debug | - | `true` |
+| `LOGTUDO_URL_LOGIN` | URL de autenticação / login | `LOGTUDO_URL` | `https://logtudo.e-login.net/` |
+| `LOGTUDO_URL_FATURADOS` | URL do relatório de Cotações Faturadas (Download 1) | `LOGTUDO_URL_COTACOES_FATURADOS`, `LOGTUDO_URL_COTACOES_FRETE`, `LOGTUDO_URL_DOWNLOAD_1` | `https://logtudo.e-login.net/...&filtro=201` |
+| `LOGTUDO_URL_NAO_FATURADOS` | URL do relatório de Cotações Não Faturadas (Download 2) | `LOGTUDO_URL_COTACOES_NAO_FATURADOS`, `LOGTUDO_URL_COTACOES_FILTRADAS`, `LOGTUDO_URL_DOWNLOAD_2` | `https://logtudo.e-login.net/...&filtro=202` |
+| `LOGTUDO_URL_CANCELADOS` | URL do relatório de Cotações Canceladas (Download 3) | `LOGTUDO_URL_COTACOES_CANCELADOS`, `LOGTUDO_URL_COTACOES_DOWNLOAD3`, `LOGTUDO_URL_DOWNLOAD_3` | `https://logtudo.e-login.net/...&filtro=151` |
+| `LOGTUDO_URL_CONHECIMENTO_FRETE` | URL do relatório de Conhecimento de Frete / Ocorrências (Download 4) | `LOGTUDO_URL_OCORRENCIAS`, `LOGTUDO_URL_DOWNLOAD_4` | `https://logtudo.e-login.net/...&filtro=167` |
 
 ### Precedência de configuração (URL e seletores)
 
-O carregamento segue esta ordem:
+O carregamento segue esta ordem de prioridade:
 
-1. `mapeamento.json` na raiz do projeto (`./mapeamento.json`)
-2. `Automacao/mapeamento.json` (retrocompatibilidade)
-3. Variáveis `LOGTUDO_*` do `.env`
+1. **Variáveis de Ambiente (`.env` ou ambiente do sistema/Docker)** - *Prioridade máxima*
+2. `mapeamento.json` na raiz do projeto (`./mapeamento.json`)
+3. `Automacao/mapeamento.json` (retrocompatibilidade)
 4. Defaults internos do sistema
 
 ## 🔒 Segurança
