@@ -7,7 +7,6 @@ import os
 import re
 import time
 from pathlib import Path
-from datetime import datetime
 
 from Automacao.config_loader import carregar_mapeamento
 from Automacao.logger_config import get_logger
@@ -20,13 +19,6 @@ URL_CONHECIMENTO_FRETE_PADRAO = (
     "https://logtudo.e-login.net/versoes/versao5.0/rotinas/"
     "c.php?id=trans_rel_conhecimento_formulario&menu=s&filtro=167"
 )
-
-
-def obter_intervalo_mes_atual() -> tuple[str, str]:
-    now = datetime.now()
-    primeiro_dia = f"01/{now.month:02d}/{now.year}"
-    hoje = now.strftime("%d/%m/%Y")
-    return primeiro_dia, hoje
 
 
 def gerar_download_conhecimento_frete(

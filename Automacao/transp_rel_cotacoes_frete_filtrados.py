@@ -47,5 +47,4 @@ def gerar_download_cotacoes_filtradas(
         debug=debug,
         subpasta="Nao_Faturados/",
         nome_arquivo="relatorio.xls",
-        preencher_datas=True,
     )

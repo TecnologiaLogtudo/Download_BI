@@ -71,7 +71,6 @@ def acessar_transp_rel_cotacoes_frete(
                 debug=debug,
                 subpasta="Faturados/",
                 nome_arquivo="relatorio.xls",
-                preencher_datas=True,
             )
             arquivos_baixados["download_1"] = {"caminho": caminho, "id": d_id}
             logger.info(f"✓ DOWNLOAD 1 OK [ID: {d_id}]")

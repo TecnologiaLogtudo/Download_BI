@@ -1,5 +1,10 @@
 # Changelog
  
+## [1.2.0] - 2026-10-02
+
+### Removido
+- **Manipulação Automática de Filtros e Datas**: Removida a injeção automática de datas do mês atual e seleção de talões via JavaScript na página de relatórios. O robô agora mantém os filtros nativos da rotina/URL sem alteração.
+ 
 ## [1.1.0] - 2026-10-01
  
 ### Adicionado

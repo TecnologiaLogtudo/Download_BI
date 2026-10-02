@@ -3,11 +3,9 @@ Helper genérico para realizar downloads de relatórios com Playwright.
 Encapsula a lógica comum de navegação, busca de botão e download.
 """
 
-import calendar
 import os
 import re
 import time
-from datetime import datetime
 from pathlib import Path
 
 from Automacao.logger_config import get_logger
@@ -15,13 +13,6 @@ from Automacao.config_pastas import DOWNLOADS_DIR_ATIVO
 from Automacao.metadata_manager import metadata_manager
 
 logger = get_logger(__name__)
-
-
-def obter_intervalo_mes_atual() -> tuple[str, str]:
-    now = datetime.now()
-    primeiro_dia = f"01/{now.month:02d}/{now.year}"
-    hoje = now.strftime("%d/%m/%Y")
-    return primeiro_dia, hoje
 
 
 def gerar_download_relatorio(
@@ -46,7 +37,7 @@ def gerar_download_relatorio(
         subpasta: Subpasta dentro de 'downloads' (ex: 'Faturados/')
         nome_arquivo: Nome customizado do arquivo
         timeout_resposta: Tempo limite em segundos aguardando resposta do servidor (padrão 120s)
-        preencher_datas: Se True, preenche automaticamente os filtros de data com o mês atual
+        preencher_datas: Mantido para retrocompatibilidade (não modifica campos)
         
     Returns:
         tuple[str, str]: (Caminho completo do arquivo, ID do download no metadados)
@@ -77,38 +68,6 @@ def gerar_download_relatorio(
 
         # Espera ficar visível e habilitado
         botao_gerar.wait_for(state="visible", timeout=10000)
-
-        # Preencher filtros de data do mês atual automaticamente apenas se solicitado
-        if preencher_datas:
-            dt_ini, dt_fim = obter_intervalo_mes_atual()
-            logger.info(f"[{nome_operacao}] Preenchendo datas do mês atual ({dt_ini} até {dt_fim})...")
-            try:
-                page.evaluate(
-                    f"""() => {{
-                        const dtIni = document.querySelector("input[name='dados_dtInicio']");
-                        const dtFim = document.querySelector("input[name='dados_dtFim']");
-                        const valIni = document.querySelector("input[name='dados_validade_de']");
-                        const valFim = document.querySelector("input[name='dados_validade_ate']");
-                        
-                        if (dtIni) dtIni.value = '{dt_ini}';
-                        if (dtFim) dtFim.value = '{dt_fim}';
-                        if (valIni) valIni.value = '{dt_ini}';
-                        if (valFim) valFim.value = '{dt_fim}';
-                    }}"""
-                )
-            except Exception as e_dt:
-                logger.warning(f"[{nome_operacao}] Não foi possível aplicar datas automáticas: {e_dt}")
-
-        try:
-            page.evaluate(
-                """() => {
-                    if (window.SWSM && typeof SWSM.adicionaTodos === 'function') {
-                        try { SWSM.adicionaTodos('dados_talao'); } catch (e) {}
-                    }
-                }"""
-            )
-        except Exception:
-            pass
 
         # Tratar alertas JS na página (ex: "Nenhum registro encontrado")
         def tratar_dialogo(dialog):
