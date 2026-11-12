@@ -61,7 +61,7 @@ def gerar_download_conhecimento_frete(
 
         page1 = popup_info.value
         logger.info("[DOWNLOAD 4 - Conhecimento Frete] Nova janela do relatório detectada! Aguardando carregamento...")
-        page1.wait_for_load_state("networkidle", timeout=30000)
+        page1.wait_for_load_state("load", timeout=15000)
 
         logger.info("[DOWNLOAD 4 - Conhecimento Frete] Baixando planilha via frame topo...")
         with page1.expect_download(timeout=60000) as download_info:

@@ -1,5 +1,11 @@
 # Changelog
  
+## [1.2.1] - 2026-11-12
+
+### Corrigido
+- **Estabilidade no Download 4 (Conhecimento Frete)**: Substituído o aguardo rígido de `networkidle` por `load` (timeout de 15s) na nova janela (popup) do relatório em `transp_rel_cotacoes_frete_download4.py`. Evita timeout de 30s causado por conexões persistentes/background do ERP, aproveitando o auto-wait nativo dos locators Playwright.
+- **Testes Unitários**: Adicionado `tests/test_download4.py` cobrindo a rotina de download e validação do estado de carregamento do popup.
+ 
 ## [1.2.0] - 2026-10-02
 
 ### Removido
